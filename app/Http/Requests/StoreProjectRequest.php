@@ -35,7 +35,7 @@ class StoreProjectRequest extends FormRequest
             'required' => 'Campo obbligatorio.',
             'title.unique' => 'Il titolo del progetto deve essere unico.',
             'thumb.image' => 'Formato file non valido.',
-            'year.date_format' => 'Formato non valido. (YYYY)'
+            'year.date_format' => 'Formato non valido. (YYYY)',
         ];
     }
 }

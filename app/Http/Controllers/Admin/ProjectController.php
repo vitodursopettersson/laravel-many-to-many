@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProjectRequest;
 use App\Models\Project;
+use App\Models\Technology;
 use App\Models\Type;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -28,7 +29,8 @@ class ProjectController extends Controller
     public function create()
     {
         $types = Type::all();
-        return view('admin.projects.create', compact('types'));
+        $technologies = Technology::all();
+        return view('admin.projects.create', compact('types', 'technologies'));
     }
 
     /**
@@ -38,16 +40,24 @@ class ProjectController extends Controller
     {
         $data = $request->all();
 
-        $newProject = new Project();
-        $newProject->title = $data['title'];
-        $newProject->slug = Str::of($newProject->title)->slug('-');
-        $newProject->thumb = Storage::put('uploads', $data['thumb']);
-        $newProject->type_id = $data['type'];
-        $newProject->description = $data['description'];
-        $newProject->year = $data['year'];
-        $newProject->save();
+        $project = new Project();
+        $project->title = $data['title'];
+        $project->slug = Str::of($project->title)->slug('-');
 
-        return redirect()->route('admin.projects.show', $newProject)->with('createMessage', 'Post creato correttamente.');
+        if (isset($data['thumb'])) {
+            $project->thumb = Storage::put('uploads', $data['thumb']);
+        }
+
+        $project->type_id = $data['type'];
+        $project->description = $data['description'];
+        $project->year = $data['year'];
+        $project->save();
+
+        if (isset($data['technologies'])) {
+            $project->technologies()->sync($data['technologies']);
+        }
+
+        return redirect()->route('admin.projects.show', $project)->with('createMessage', 'Post creato correttamente.');
     }
 
     /**
@@ -65,7 +75,8 @@ class ProjectController extends Controller
     public function edit(Project $project)
     {
         $types = Type::all();
-        return view('admin.projects.edit', compact('project', 'types'));
+        $technologies = Technology::all();
+        return view('admin.projects.edit', compact('project', 'types', 'technologies'));
     }
 
     /**
@@ -74,6 +85,11 @@ class ProjectController extends Controller
     public function update(Request $request, Project $project)
     {
         $data = $request->all();
+
+        if (isset($data['technologies'])) {
+            $project->technologies()->sync($data['technologies']);
+        }
+
         $project->update($data);
 
         return redirect()->route('admin.projects.index')->with('updateMessage', 'Post aggiornato correttamente.');
